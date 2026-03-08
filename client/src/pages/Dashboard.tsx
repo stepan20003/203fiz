@@ -1,25 +1,55 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Plus, Share2, Activity, Zap, ArrowUpRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const Dashboard = () => {
+  const navigate = useNavigate();
+  const [user, setUser] = useState<any>(null);
+  const [workflows, setWorkflows] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const userData = localStorage.getItem('user');
+
+    if (!token || !userData) {
+      navigate('/login');
+      return;
+    }
+
+    setUser(JSON.parse(userData));
+    fetchWorkflows(token);
+  }, [navigate]);
+
+  const fetchWorkflows = async (token: string) => {
+    try {
+      const response = await fetch('http://localhost:5000/api/workflows', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setWorkflows(data);
+      }
+    } catch (error) {
+      console.error('Error fetching workflows:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const stats = [
-    { name: 'Ակտիվ հոսքեր', value: '12', icon: <Share2 className="h-6 w-6" />, color: 'bg-blue-500' },
-    { name: 'Կատարումներ (այս ամիս)', value: '1,284', icon: <Activity className="h-6 w-6" />, color: 'bg-purple-500' },
-    { name: 'Ինտեգրումներ', value: '8', icon: <Zap className="h-6 w-6" />, color: 'bg-amber-500' },
+    { name: 'Ակտիվ հոսքեր', value: workflows.filter(w => w.is_active).length.toString(), icon: <Share2 className="h-6 w-6" />, color: 'bg-blue-500' },
+    { name: 'Կատարումներ (այս ամիս)', value: '0', icon: <Activity className="h-6 w-6" />, color: 'bg-purple-500' },
+    { name: 'Ինտեգրումներ', value: '0', icon: <Zap className="h-6 w-6" />, color: 'bg-amber-500' },
   ];
 
-  const recentWorkflows = [
-    { id: 1, name: 'Shopify-ից Telegram ծանուցում', status: 'Ակտիվ', lastRun: '2 րոպե առաջ' },
-    { id: 2, name: 'Google Sheets տվյալների սինխրոնիզացիա', status: 'Ակտիվ', lastRun: '1 ժամ առաջ' },
-    { id: 3, name: 'Webhook տվյալների մշակում', status: 'Պասիվ', lastRun: 'երեկ' },
-  ];
+  if (!user) return null;
 
   return (
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Բարի գալուստ, Արմեն</h1>
+          <h1 className="text-2xl font-bold text-slate-900">Բարի գալուստ, {user.fullName || 'Օգտատեր'}</h1>
           <p className="text-slate-500 text-sm">Ահա թե ինչ է կատարվում Ձեր ավտոմատացումների հետ այսօր:</p>
         </div>
         <Link
@@ -64,22 +94,34 @@ const Dashboard = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {recentWorkflows.map((workflow) => (
-                <tr key={workflow.id} className="hover:bg-slate-50 transition-colors cursor-pointer">
-                  <td className="px-6 py-4 font-bold text-slate-900">{workflow.name}</td>
-                  <td className="px-6 py-4">
-                    <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase ${
-                      workflow.status === 'Ակտիվ' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-700'
-                    }`}>
-                      {workflow.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-slate-500">{workflow.lastRun}</td>
-                  <td className="px-6 py-4 text-right">
-                    <button className="text-slate-400 hover:text-primary-600 font-bold text-sm transition-colors">Խմբագրել</button>
-                  </td>
-                </tr>
-              ))}
+              {loading ? (
+                <tr><td colSpan={4} className="px-6 py-4 text-center text-slate-500">Բեռնում...</td></tr>
+              ) : workflows.length === 0 ? (
+                <tr><td colSpan={4} className="px-6 py-4 text-center text-slate-500">Աշխատանքային հոսքեր չեն գտնվել:</td></tr>
+              ) : (
+                workflows.map((workflow) => (
+                  <tr
+                    key={workflow.id}
+                    className="hover:bg-slate-50 transition-colors cursor-pointer"
+                    onClick={() => navigate(`/dashboard/workflows/${workflow.id}`)}
+                  >
+                    <td className="px-6 py-4 font-bold text-slate-900">{workflow.name}</td>
+                    <td className="px-6 py-4">
+                      <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase ${
+                        workflow.is_active ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-700'
+                      }`}>
+                        {workflow.is_active ? 'Ակտիվ' : 'Պասիվ'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-slate-500">
+                      {workflow.created_at ? new Date(workflow.created_at).toLocaleDateString('hy-AM') : '-'}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <button className="text-slate-400 hover:text-primary-600 font-bold text-sm transition-colors">Խմբագրել</button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

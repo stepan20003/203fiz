@@ -42,7 +42,7 @@ const WorkflowEditor = () => {
 
   const addNode = (type: string, name: string) => {
     const newNode: Node = {
-      id: Math.random().toString(36).substr(2, 9),
+      id: crypto.randomUUID(),
       type,
       name,
       x: 100 - canvasOffset.x,
@@ -89,7 +89,7 @@ const WorkflowEditor = () => {
       const exists = connections.find(c => c.sourceId === connectingSource && c.targetId === targetId);
       if (!exists) {
         const newConn: Connection = {
-          id: `c-${Date.now()}`,
+          id: crypto.randomUUID(),
           sourceId: connectingSource,
           targetId: targetId
         };
@@ -271,7 +271,7 @@ const WorkflowEditor = () => {
                      <div>
                         <label className="block text-xs font-bold text-slate-700 mb-1">Webhook URL</label>
                         <div className="bg-slate-100 p-3 rounded-lg text-[10px] break-all font-mono text-slate-600 border border-slate-200">
-                           https://api.avtomat.am/v1/webhook/{selectedNode.id}
+                           https://api.agenttau.com/v1/webhook/{selectedNode.id}
                         </div>
                      </div>
                   </div>

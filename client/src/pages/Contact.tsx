@@ -20,8 +20,8 @@ const Contact = () => {
                  </div>
                  <div>
                     <h4 className="font-bold text-slate-900 mb-1">Էլ. հասցե</h4>
-                    <p className="text-slate-500">support@avtomat.am</p>
-                    <p className="text-slate-500">info@avtomat.am</p>
+                    <p className="text-slate-500">support@agenttau.com</p>
+                    <p className="text-slate-500">info@agenttau.com</p>
                  </div>
               </div>
               <div className="flex items-start">

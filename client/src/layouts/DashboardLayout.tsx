@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   Share2,
@@ -20,7 +20,22 @@ interface DashboardLayoutProps {
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [user, setUser] = useState<any>(null);
   const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      setUser(JSON.parse(userData));
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    navigate('/login');
+  };
 
   const menuItems = [
     { name: 'Վահանակ', icon: <LayoutDashboard className="h-5 w-5" />, path: '/dashboard' },
@@ -63,7 +78,10 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
         </nav>
 
         <div className="p-4 border-t border-slate-800 space-y-2">
-          <button className="w-full flex items-center p-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition-colors">
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center p-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition-colors"
+          >
             <LogOut className="h-5 w-5" />
             {isSidebarOpen && <span className="ml-4 font-medium">Ելք</span>}
           </button>
@@ -88,7 +106,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             </button>
             <div className="flex items-center space-x-3 border-l border-slate-200 pl-6">
                <div className="text-right hidden sm:block">
-                  <p className="text-sm font-bold text-slate-900">Արմեն Արմենյան</p>
+                  <p className="text-sm font-bold text-slate-900">{user?.fullName || 'Օգտատեր'}</p>
                   <p className="text-xs text-slate-500">Անվճար պլան</p>
                </div>
                <div className="h-10 w-10 bg-primary-100 rounded-full flex items-center justify-center text-primary-600">
